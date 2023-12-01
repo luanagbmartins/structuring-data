@@ -16,7 +16,6 @@ def extract_and_index(
     out_dir="indexed_docs",
     **kwargs
 ):
-
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
     print("----- Strating at " + now + " -----")
     out_dir = os.path.join(out_dir, now)
@@ -68,7 +67,8 @@ def extract_and_index(
             doc = nlp(key)
             local_embs.append(doc.vector)
         final_emb = np.array(local_embs).mean(axis=0)
-        embs.append(final_emb)
+        if final_emb.size:
+            embs.append(final_emb)
 
     index = nmslib.init(method="hnsw", space="angulardist")
     index.addDataPointBatch(embs)

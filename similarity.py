@@ -9,8 +9,10 @@ from datetime import datetime
 
 
 class Finder:
-    def __init__(self, index_folder_path, embedding_model="pt_core_news_lg", diversity=0):
-
+    def __init__(
+        self, index_folder_path, embedding_model="pt_core_news_lg", diversity=0
+    ):
+        self.embedding_model = embedding_model
         if isinstance(embedding_model, str):
             self.nlp = spacy.load(embedding_model)
         else:
@@ -26,8 +28,8 @@ class Finder:
         with open(os.path.join(index_folder_path, "params.json")) as f:
             self.params = json.load(f)
         self.params["min_df"] = 1
-        if diversity > 0 and self.params['diversity'] > 0:
-            self.params['diversity'] = diversity
+        if diversity > 0 and self.params["diversity"] > 0:
+            self.params["diversity"] = diversity
 
         self.kw_model = KeyBERT(model=self.nlp)
 
@@ -38,8 +40,16 @@ class Finder:
 
         local_embs = []
         for key, val in new_kw:
-            doc = self.nlp(key)
-            local_embs.append(doc.vector)
+            if isinstance(self.embedding_model, str):
+                doc = self.nlp(key)
+                local_embs.append(doc.vector)
+            else:
+                try:
+                    doc = self.nlp.encode(key)
+                except:
+                    doc = self.nlp.transform([key]).toarray()
+                local_embs.append(doc)
+
         final_emb = np.array(local_embs).mean(axis=0)
         ids, ds = self.similar_raw(final_emb, k)
 
